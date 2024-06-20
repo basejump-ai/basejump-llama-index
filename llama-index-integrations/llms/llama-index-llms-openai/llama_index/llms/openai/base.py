@@ -327,6 +327,7 @@ class OpenAI(LLM):
         try:
             openai_message = response.choices[0].message
         except Exception as e:
+            print('HEY LOOK HERE!')
             logger.warn('Error in response!', e)
             raise e
         message = from_openai_message(openai_message)
