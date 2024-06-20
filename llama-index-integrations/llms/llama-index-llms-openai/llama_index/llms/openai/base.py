@@ -577,15 +577,20 @@ class OpenAI(LLM):
             astream_complete_fn = self._astream_complete
         return await astream_complete_fn(prompt, **kwargs)
 
-    @llm_retry_decorator
+    # @llm_retry_decorator
     async def _achat(
         self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponse:
         aclient = self._get_aclient()
         message_dicts = to_openai_message_dicts(messages)
-        response = await aclient.chat.completions.create(
-            messages=message_dicts, stream=False, **self._get_model_kwargs(**kwargs)
-        )
+        try:
+            response = await aclient.chat.completions.create(
+                messages=message_dicts, stream=False, **self._get_model_kwargs(**kwargs)
+            )
+        except Exception as e:
+            print('HEY LOOK HERE!')
+            logger.warn('Error in response!', e)
+            raise e        
         message_dict = response.choices[0].message
         message = from_openai_message(message_dict)
         logprobs_dict = response.choices[0].logprobs
