@@ -324,7 +324,11 @@ class OpenAI(LLM):
             stream=False,
             **self._get_model_kwargs(**kwargs),
         )
-        openai_message = response.choices[0].message
+        try:
+            openai_message = response.choices[0].message
+        except Exception as e:
+            logger.warn('Error in response!', e)
+            raise e
         message = from_openai_message(openai_message)
         openai_token_logprobs = response.choices[0].logprobs
         logprobs = None
