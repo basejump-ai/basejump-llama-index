@@ -65,6 +65,9 @@ from openai.types.chat.chat_completion_chunk import (
     ChoiceDeltaToolCall,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 DEFAULT_OPENAI_MODEL = "gpt-3.5-turbo"
 
 llm_retry_decorator = create_retry_decorator(
