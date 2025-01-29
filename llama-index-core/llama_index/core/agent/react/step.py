@@ -18,7 +18,7 @@ from typing import (
     cast,
     Callable,
 )
-
+from llama_index.llms.openai.base import OpenAI
 from llama_index.core.agent.react.formatter import ReActChatFormatter
 from llama_index.core.agent.react.output_parser import ReActOutputParser, COULD_NOT_PARSE_TXT
 from llama_index.core.agent.react.types import (
@@ -501,6 +501,7 @@ class ReActAgentWorker(BaseAgentWorker):
         elapsed_time = end_time - start_time
         # print(f'USING LLM: {elapsed_time} seconds')
         # given react prompt outputs, call tools or return response
+
         reasoning_steps, is_done = await self._aprocess_actions(
             task, tools, output=chat_response
         )
@@ -509,9 +510,18 @@ class ReActAgentWorker(BaseAgentWorker):
             task.extra_state["current_reasoning"], task.extra_state["sources"]
         )
         if is_done:
-            task.extra_state["new_memory"].put(
-                ChatMessage(content=agent_response.response, role=MessageRole.ASSISTANT)
-            )
+            # TODO: Add if statement for  llm check
+            if isinstance(self._llm, OpenAI):
+                final_response = await self._llm.check_confidence(messages=input_chat, task=task, last_response=chat_response, agent_response=agent_response)
+                task.extra_state["new_memory"].put(
+                    final_response
+                    # ChatMessage(content=agent_response.response, role=MessageRole.ASSISTANT)
+                )
+                agent_response.response = final_response.message.content
+            else:
+                task.extra_state["new_memory"].put(
+                    ChatMessage(content=agent_response.response, role=MessageRole.ASSISTANT)
+                )
 
         return self._get_task_step_response(agent_response, step, is_done)
 

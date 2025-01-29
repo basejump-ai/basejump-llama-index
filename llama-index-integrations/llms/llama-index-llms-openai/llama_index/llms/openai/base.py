@@ -10,8 +10,8 @@ from typing import (
     cast,
     runtime_checkable,
 )
-import datetime
-import time
+
+import numpy as np
 
 import httpx
 import tiktoken
@@ -26,6 +26,8 @@ from llama_index.core.base.llms.types import (
     LLMMetadata,
     MessageRole,
 )
+from llama_index.core.chat_engine.types import (
+    AgentChatResponse)
 from llama_index.core.bridge.pydantic import Field, PrivateAttr
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.constants import (
@@ -35,6 +37,8 @@ from llama_index.core.llms.callbacks import (
     llm_chat_callback,
     llm_completion_callback,
 )
+from llama_index.core.agent.types import (
+    Task)
 from llama_index.core.base.llms.generic_utils import (
     achat_to_completion_decorator,
     acompletion_to_chat_decorator,
@@ -583,8 +587,7 @@ class OpenAI(LLM):
         response = await aclient.chat.completions.create(
             messages=message_dicts,
             stream=False,
-            **self._get_model_kwargs(**kwargs),
-            # logprobs=True,
+            **self._get_model_kwargs(**kwargs)
         )
         # except Exception:
         #     redis_client.json().numincrby("aichat", "$['errors']", 1)
@@ -596,12 +599,47 @@ class OpenAI(LLM):
 
         message_dict = response.choices[0].message
         message = from_openai_message(message_dict)
-        # logprobs_dict = response.choices[0].logprobs
+
         return ChatResponse(
             message=message,
             raw=response,
             additional_kwargs=self._get_response_token_counts(response),
         )
+
+    async def check_confidence(
+        self, messages: Sequence[ChatMessage], task: Task, last_response: ChatResponse, agent_response: AgentChatResponse, **kwargs: Any
+    ) -> ChatResponse:
+        aclient = self._get_aclient()
+        messages.append(ChatMessage(role="assistant", content=last_response.message.content))
+
+        # Ask AI about confidence
+        confidence_prompt = f"Respond with only 'true' or 'false': Given the users request of '{task.input}' are you confident in your previous response?"
+        messages.append(ChatMessage(role="user", content=confidence_prompt))
+        message_dicts = to_openai_message_dicts(messages)
+
+        confidence_response = await aclient.chat.completions.create(
+            messages=message_dicts,
+            stream=False,
+            **self._get_model_kwargs(**kwargs),
+            logprobs=True,
+        )
+
+        confidence_token = confidence_response.choices[0]
+
+        # Calculate linear probability
+        linear_prob = np.round(np.exp(confidence_token.logprobs.content[0].logprob) * 100, 2)
+        # Decide on response based on confidence and linear probability
+        #TODO: may need to add linear_prob filtering to false statements
+        if (confidence_token.message.content.lower() == "true" and linear_prob < 98) or (confidence_token.message.content.lower() == "false"):
+            return ChatResponse(
+                message=ChatMessage(role=MessageRole.ASSISTANT, content="I cannot find an answer I am confident in given the data. Could you please rephrase the question or consult a member of your data team to ensure the question can be answered based on your data?"),
+            )
+        else:
+            if confidence_token.message.content.lower() not in ["false", "true"]:
+                print("Malformed Response Error: The agent failed to return a single token respones confidence filtering failed")
+            return ChatResponse(
+                message=ChatMessage(content=agent_response.response, role=MessageRole.ASSISTANT),
+            )
 
     @llm_retry_decorator
     async def _astream_chat(
