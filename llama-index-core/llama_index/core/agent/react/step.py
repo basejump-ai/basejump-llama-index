@@ -21,7 +21,10 @@ from typing import (
 
 from llama_index.llms.openai.base import OpenAI
 from llama_index.core.agent.react.formatter import ReActChatFormatter
-from llama_index.core.agent.react.output_parser import ReActOutputParser, COULD_NOT_PARSE_TXT
+from llama_index.core.agent.react.output_parser import (
+    ReActOutputParser,
+    COULD_NOT_PARSE_TXT,
+)
 from llama_index.core.agent.react.types import (
     ActionReasoningStep,
     BaseReasoningStep,
@@ -219,7 +222,7 @@ class ReActAgentWorker(BaseAgentWorker):
             )
             background_tasks.add(task)
             task.add_done_callback(background_tasks.discard)
-            
+
         current_reasoning.append(reasoning_step)
 
         if reasoning_step.is_done:
@@ -285,6 +288,7 @@ class ReActAgentWorker(BaseAgentWorker):
         output: ChatResponse,
         is_streaming: bool = False,
     ) -> Tuple[List[BaseReasoningStep], bool]:
+
         tools_dict = {tool.metadata.name: tool for tool in tools}
         _, current_reasoning, is_done = self._extract_reasoning_step(
             output, is_streaming
@@ -305,6 +309,7 @@ class ReActAgentWorker(BaseAgentWorker):
             },
         ) as event:
             import time
+
             start_time = time.time()
             tool_output = await tool.acall(**reasoning_step.action_input)
             end_time = time.time()
@@ -498,6 +503,7 @@ class ReActAgentWorker(BaseAgentWorker):
         # send prompt
         start_time = time.time()
         chat_response = await self._llm.achat(input_chat)
+        breakpoint()
         end_time = time.time()
         elapsed_time = end_time - start_time
         # print(f'USING LLM: {elapsed_time} seconds')
@@ -524,7 +530,6 @@ class ReActAgentWorker(BaseAgentWorker):
                 ChatMessage(content=agent_response.response, role=MessageRole.ASSISTANT)
             )
         return self._get_task_step_response(agent_response, step, is_done)
-
 
     def _run_step_stream(
         self,
