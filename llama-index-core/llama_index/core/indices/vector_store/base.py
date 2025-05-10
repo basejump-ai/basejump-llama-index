@@ -340,7 +340,7 @@ class VectorStoreIndex(BaseIndex[IndexDict]):
         self._insert(nodes, **insert_kwargs)
         self._storage_context.index_store.add_index_struct(self._index_struct)
     
-    async def async_insert_nodes(self, nodes: Sequence[BaseNode], **insert_kwargs: Any) -> None:
+    async def ainsert_nodes(self, nodes: Sequence[BaseNode], **insert_kwargs: Any) -> None:
         """Insert nodes.
 
         NOTE: overrides BaseIndex.insert_nodes.
@@ -382,7 +382,7 @@ class VectorStoreIndex(BaseIndex[IndexDict]):
         #     "deletes nodes using the ref_doc_id of ingested documents."
         # )
 
-    async def async_delete_nodes(
+    async def adelete_nodes(
         self,
         node_ids: List[str],
         delete_from_docstore: bool = False,
@@ -394,13 +394,7 @@ class VectorStoreIndex(BaseIndex[IndexDict]):
             node_ids (List[str]): A list of node_ids from the nodes to delete
 
         """
-        await self._vector_store.async_delete_nodes(node_ids)
-        # raise NotImplementedError(
-        #     "Vector indices currently only support delete_ref_doc, which "
-        #     "deletes nodes using the ref_doc_id of ingested documents."
-        # )
-
-        # delete from docstore only if needed
+        await self._vector_store.adelete_nodes(node_ids)
         if (
             not self._vector_store.stores_text or self._store_nodes_override
         ) and delete_from_docstore:
