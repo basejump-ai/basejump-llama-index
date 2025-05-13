@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Pattern
 import fsspec
 import re
 from redis import Redis
+import redis.asyncio as redis_async
 from redis.asyncio import Redis as RedisAsync
 from redis.exceptions import RedisError
 from redis.exceptions import TimeoutError as RedisTimeoutError
@@ -187,15 +188,18 @@ class RedisVectorStore(BasePydanticVectorStore):
             self.create_index()
             if not self._redis_client_async:
                 self._redis_client_async = redis_async.Redis(
-                    host=redis_client.connection_pool.connection_kwargs['host'],
-                    port=redis_client.connection_pool.connection_kwargs['port'],
-                    **{k: v for k, v in redis_client.connection_pool.connection_kwargs.items() 
-                    if k not in ['host', 'port']}
-                )                   
+                    host=redis_client.connection_pool.connection_kwargs["host"],
+                    port=redis_client.connection_pool.connection_kwargs["port"],
+                    **{
+                        k: v
+                        for k, v in redis_client.connection_pool.connection_kwargs.items()
+                        if k not in ["host", "port"]
+                    },
+                )
         if not redis_client and not redis_url and not redis_client_async:
             raise Exception(
                 "Either redis_client, redis_url, or redis_client_async need to be defined"
-            )        
+            )
         self._async_index = AsyncSearchIndex(
             schema=schema, redis_client=self._redis_client_async
         )
