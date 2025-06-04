@@ -591,7 +591,7 @@ class RedisVectorStore(BasePydanticVectorStore):
     def _to_redis_query(self, query: VectorStoreQuery) -> VectorQuery:
         """Creates a RedisQuery from a VectorStoreQuery."""
         # TODO: Figure out why create_redis_filter_expression doesn't handle IN properly
-        if self.legacy_filters:
+        if self.legacy_filters and query.filters:
             filter_expression = self._to_redis_filters(query.filters)
         else:
             filter_expression = self._create_redis_filter_expression(query.filters)
