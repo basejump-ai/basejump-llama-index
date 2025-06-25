@@ -96,7 +96,7 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
         callback_manager: Optional[CallbackManager] = None,
         tool_retriever: Optional[ObjectRetriever[BaseTool]] = None,
         allow_parallel_tool_calls: bool = True,
-        response_hook: Optional[Callable] = None
+        response_hook: Optional[Callable] = None,
     ) -> None:
         """Init params."""
         if not llm.metadata.is_function_calling_model:
@@ -333,6 +333,7 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
 
         # call all tools, gather responses
         task.extra_state["new_memory"].put(response.message)
+        reached_max_iterations = False
         if (
             len(tool_calls) == 0
             or task.extra_state["n_function_calls"] >= self._max_function_calls
@@ -340,10 +341,12 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
             # we are done
             is_done = True
             new_steps = []
+            if task.extra_state["n_function_calls"] >= self._max_function_calls:
+                reached_max_iterations = True
         else:
             is_done = False
             if response.message.content and self.response_hook:
-                self.response_hook(str(response.message.content))            
+                self.response_hook(str(response.message.content))
             for i, tool_call in enumerate(tool_calls):
                 # TODO: maybe execute this with multi-threading
                 return_direct = self._call_function(
@@ -381,9 +384,9 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
             response_str = str(response.message.content)
         except AttributeError:
             response_str = str(response)
-
+        if reached_max_iterations:
+            response_str = "Reached max iterations."
         agent_response = AgentChatResponse(response=response_str, sources=tool_outputs)
-
 
         return TaskStepOutput(
             output=agent_response,
@@ -428,6 +431,7 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
 
         # call all tools, gather responses
         task.extra_state["new_memory"].put(response.message)
+        reached_max_iterations = False
         if (
             len(tool_calls) == 0
             or task.extra_state["n_function_calls"] >= self._max_function_calls
@@ -435,6 +439,8 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
             # we are done
             is_done = True
             new_steps = []
+            if task.extra_state["n_function_calls"] >= self._max_function_calls:
+                reached_max_iterations = True
         else:
             is_done = False
             if response.message.content and self.response_hook:
@@ -477,7 +483,8 @@ class FunctionCallingAgentWorker(BaseAgentWorker):
             response_str = str(response.message.content)
         except AttributeError:
             response_str = str(response)
-
+        if reached_max_iterations:
+            response_str = "Reached max iterations."
         agent_response = AgentChatResponse(response=response_str, sources=tool_outputs)
 
         return TaskStepOutput(
