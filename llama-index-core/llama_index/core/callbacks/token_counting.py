@@ -107,7 +107,10 @@ def get_llm_token_counts(
         messages_str = "\n".join([str(x) for x in messages])
 
         response = payload.get(EventPayload.RESPONSE)
-        model = response.raw.get("model")
+        if isinstance(response.raw, dict):
+            model = response.raw.get("model")
+        else:
+            model = response.raw.model
         response_str = str(response)
 
         if response:
