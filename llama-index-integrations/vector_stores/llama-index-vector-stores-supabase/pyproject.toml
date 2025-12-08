@@ -34,7 +34,7 @@ readme = "README.md"
 license = "MIT"
 dependencies = [
     "vecs>=0.4.2,<0.5",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

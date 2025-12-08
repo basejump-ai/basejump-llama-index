@@ -34,7 +34,7 @@ readme = "README.md"
 license = "GPL-2.0"
 maintainers = [{name = "flash1293"}]
 dependencies = [
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "airbyte-cdk",
 ]
 

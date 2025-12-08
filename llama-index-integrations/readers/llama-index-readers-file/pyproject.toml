@@ -73,7 +73,7 @@ dependencies = [
     "pypdf>=5.1.0,<6",
     "striprtf>=0.0.26,<0.0.27",
     "pandas",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [project.optional-dependencies]

@@ -36,7 +36,7 @@ maintainers = [{name = "logan-markewich"}]
 dependencies = [
     "llama-index-embeddings-openai>=0.3.0,<0.4",
     "llama-index-llms-openai>=0.3.0,<0.4",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

@@ -34,7 +34,7 @@ readme = "README.md"
 license = "MIT"
 dependencies = [
     "llama-index-embeddings-huggingface>=0.4.0,<0.5",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "optimum[exporters]>=1.16.2,<2",
 ]
 

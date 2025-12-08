@@ -37,7 +37,7 @@ dependencies = [
     "instructorembedding>=1.0.1,<2",
     "torch>=2.1.2,<3",
     "sentence-transformers>=2.2.2,<3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

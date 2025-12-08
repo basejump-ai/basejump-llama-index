@@ -37,7 +37,7 @@ keywords = ["linear"]
 dependencies = [
     "gql>=3.5.0,<4",
     "requests>=2.31.0,<3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

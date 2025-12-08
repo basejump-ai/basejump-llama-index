@@ -34,7 +34,7 @@ readme = "README.md"
 license = "AGPL-3.0"
 dependencies = [
     "uptrain>=0.7.1",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

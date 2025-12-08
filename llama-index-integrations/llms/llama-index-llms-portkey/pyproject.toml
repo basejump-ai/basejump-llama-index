@@ -37,7 +37,7 @@ dependencies = [
     "portkey-ai>=1.1.4,<2",
     "portkey>=0.1.2,<0.2",
     "llama-index-llms-openai>=0.3.0,<0.4",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

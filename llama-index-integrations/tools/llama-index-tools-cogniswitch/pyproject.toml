@@ -40,7 +40,7 @@ keywords = [
     "neural",
     "symbolic",
 ]
-dependencies = ["llama-index-core>=0.12.0,<0.13"]
+dependencies = ["basejump-llama-index-core>=0.12.0,<0.13"]
 
 [tool.codespell]
 check-filenames = true

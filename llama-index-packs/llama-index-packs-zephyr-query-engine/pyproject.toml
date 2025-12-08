@@ -47,7 +47,7 @@ dependencies = [
     "accelerate>=0.26.1,<0.27",
     "bitsandbytes>=0.42.0,<0.43",
     "llama-index-llms-huggingface>=0.4.0,<0.5",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

@@ -43,7 +43,7 @@ keywords = [
 ]
 dependencies = [
     "zenguard>=0.2.1,<0.3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

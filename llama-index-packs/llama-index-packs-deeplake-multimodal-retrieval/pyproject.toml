@@ -39,7 +39,7 @@ keywords = [
     "retriever",
 ]
 dependencies = [
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "llama-index-vector-stores-deeplake>=0.3.0,<0.4",
 ]
 

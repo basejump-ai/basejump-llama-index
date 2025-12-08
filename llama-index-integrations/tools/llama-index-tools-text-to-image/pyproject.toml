@@ -37,7 +37,7 @@ dependencies = [
     "pillow>=10.2.0,<11",
     "matplotlib>=3.8.2,<4",
     "openai>=1.1.0",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

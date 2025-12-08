@@ -41,7 +41,7 @@ keywords = [
 dependencies = [
     "gql>=3.5.0,<4",
     "requests-toolbelt>=1.0.0,<2",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

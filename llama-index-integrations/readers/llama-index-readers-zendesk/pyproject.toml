@@ -41,7 +41,7 @@ keywords = [
 dependencies = [
     "beautifulsoup4>=4.12.3,<5",
     "requests>=2.31.0,<3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

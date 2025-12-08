@@ -35,7 +35,7 @@ license = "MIT"
 maintainers = [{name = "jerryjliu"}]
 dependencies = [
     "pymongo>=4.6.1,<5",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

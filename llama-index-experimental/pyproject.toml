@@ -29,7 +29,7 @@ version = "0.5.5"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-llama-index-core = "^0.12.13"
+basejump-llama-index-core = "^0.12.13"
 llama-index-finetuning = "^0.3.2"
 pandas = "*"
 duckdb = "^1.0.0"

@@ -41,7 +41,7 @@ dependencies = [
     "llama-index-llms-openai>=0.3.0,<0.4",
     "umap-learn>=0.5.5",
     "scikit-learn",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

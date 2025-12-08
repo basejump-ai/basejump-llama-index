@@ -43,7 +43,7 @@ keywords = [
 dependencies = [
     "llama-index-callbacks-arize-phoenix>=0.3.0,<0.4",
     "llama-index-readers-web>=0.3.0,<0.4",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

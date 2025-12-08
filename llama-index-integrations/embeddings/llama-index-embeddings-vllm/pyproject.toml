@@ -31,7 +31,7 @@ authors = [{name = "Yuri", email = "yuri@yurinet.blog"}]
 requires-python = ">=3.10,<4.0"
 readme = "README.md"
 license = "MIT"
-dependencies = ["llama-index-core>=0.12.0,<0.13", "vllm"]
+dependencies = ["basejump-llama-index-core>=0.12.0,<0.13", "vllm"]
 
 [tool.codespell]
 check-filenames = true

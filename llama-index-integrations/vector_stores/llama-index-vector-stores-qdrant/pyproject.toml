@@ -37,7 +37,7 @@ license = "MIT"
 dependencies = [
     "qdrant-client>=1.7.1",
     "grpcio>=1.60.0,<2",
-    "llama-index-core>=0.12.7,<0.13",
+    "basejump-llama-index-core>=0.12.7,<0.13",
 ]
 
 [project.optional-dependencies]

@@ -43,7 +43,7 @@ dependencies = [
     "torch>=2.1.2,<3",
     "transformers>=4.37.1,<5",
     "accelerate>=0.26.1,<0.27",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

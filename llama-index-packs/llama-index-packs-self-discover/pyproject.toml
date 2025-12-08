@@ -39,7 +39,7 @@ keywords = [
     "task",
 ]
 dependencies = [
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "llama-index-llms-openai>=0.3.38",
 ]
 

@@ -26,7 +26,7 @@ dependencies = [
     "tidb-vector>=0.0.9,<0.0.10",
     "PyMySQL>=1.1.1,<2",
     "SQLAlchemy>=2.0.30,<3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

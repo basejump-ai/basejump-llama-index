@@ -42,7 +42,7 @@ dependencies = [
     "pandasai>=2.2.12",
     "pandas",
     "numpy<2.0",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "llama-index-readers-file>=0.4.0,<0.5",
 ]
 

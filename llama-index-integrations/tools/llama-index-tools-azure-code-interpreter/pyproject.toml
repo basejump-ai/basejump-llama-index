@@ -36,7 +36,7 @@ maintainers = [{name = "ajhofmann"}]
 dependencies = [
     "azure-identity>=1.16.0,<2",
     "requests>=2.31.0,<3",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

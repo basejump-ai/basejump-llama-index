@@ -34,7 +34,7 @@ readme = "README.md"
 license = "MIT"
 maintainers = [{name = "ajhofmann"}]
 keywords = ["math"]
-dependencies = ["llama-index-core>=0.12.0,<0.13"]
+dependencies = ["basejump-llama-index-core>=0.12.0,<0.13"]
 
 [tool.codespell]
 check-filenames = true

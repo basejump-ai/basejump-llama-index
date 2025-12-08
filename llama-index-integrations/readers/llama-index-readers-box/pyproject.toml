@@ -39,7 +39,7 @@ maintainers = [
 ]
 dependencies = [
     "box-sdk-gen>=1.5.0",
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
 ]
 
 [tool.codespell]

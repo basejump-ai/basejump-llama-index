@@ -32,7 +32,7 @@ authors = [{name = "Rodrigo Maldonado", email = "rodrigo.maldonado@pucp.edu.pe"}
 requires-python = ">=3.9,<4.0"
 readme = "README.md"
 dependencies = [
-    "llama-index-core>=0.12.0,<0.13",
+    "basejump-llama-index-core>=0.12.0,<0.13",
     "python-dotenv>=1.0.1,<2",
     "aiohttp",
 ]
