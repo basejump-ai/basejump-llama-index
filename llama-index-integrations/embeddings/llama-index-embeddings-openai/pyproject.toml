@@ -25,8 +25,8 @@ dev = [
 ]
 
 [project]
-name = "llama-index-embeddings-openai"
-version = "0.3.1"
+name = "basejump-llama-index-embeddings-openai"
+version = "0.3.1.post1"
 description = "llama-index embeddings openai integration"
 authors = [{name = "Your Name", email = "you@example.com"}]
 requires-python = ">=3.9,<4.0"

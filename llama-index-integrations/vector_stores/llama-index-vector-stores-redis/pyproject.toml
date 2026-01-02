@@ -28,8 +28,8 @@ dev = [
 ]
 
 [project]
-name = "llama-index-vector-stores-redis"
-version = "0.5.1"
+name = "basejump-llama-index-vector-stores-redis"
+version = "0.5.1.post1"
 description = "llama-index vector_stores redis integration"
 authors = [{name = "Tyler Hutcherson", email = "tyler.hutcherson@redis.com"}]
 requires-python = ">=3.9,<3.14"
