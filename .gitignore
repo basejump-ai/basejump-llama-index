@@ -15,6 +15,7 @@ venv/
 .__pycache__
 __pycache__
 dev_notebooks/
+.311venv/
 
 # Other
 llamaindex_registry.txt
