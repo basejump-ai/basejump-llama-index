@@ -141,6 +141,7 @@ class FunctionCallingProgram(BasePydanticProgram[Model]):
             [tool],
             chat_history=messages,
             verbose=self._verbose,
+            tool_choice=self._tool_choice,
             allow_parallel_tool_calls=self._allow_parallel_tool_calls,
             **llm_kwargs,
         )
@@ -162,6 +163,7 @@ class FunctionCallingProgram(BasePydanticProgram[Model]):
             [tool],
             chat_history=self._prompt.format_messages(llm=self._llm, **kwargs),
             verbose=self._verbose,
+            tool_choice=self._tool_choice,
             allow_parallel_tool_calls=self._allow_parallel_tool_calls,
             **llm_kwargs,
         )
@@ -261,6 +263,7 @@ class FunctionCallingProgram(BasePydanticProgram[Model]):
             [tool],
             chat_history=messages,
             verbose=self._verbose,
+            tool_choice=self._tool_choice,
             allow_parallel_tool_calls=self._allow_parallel_tool_calls,
             **llm_kwargs,
         )
@@ -305,6 +308,7 @@ class FunctionCallingProgram(BasePydanticProgram[Model]):
             [tool],
             chat_history=messages,
             verbose=self._verbose,
+            tool_choice=self._tool_choice,
             allow_parallel_tool_calls=self._allow_parallel_tool_calls,
             **(llm_kwargs or {}),
         )
