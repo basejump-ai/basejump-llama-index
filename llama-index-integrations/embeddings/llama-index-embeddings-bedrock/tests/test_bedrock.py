@@ -174,6 +174,99 @@ class TestBedrockEmbedding(TestCase):
         for i in range(2):
             self.assertEqual(embedding[i], mock_response["embeddings"][i])
 
+    def test_get_text_embedding_cohere_v4_inference_profile(self) -> None:
+        """Embed v4 is called through an inference profile and returns typed embeddings."""
+        bedrock_stubber = Stubber(self.bedrock_client)
+
+        mock_response = {"embeddings": {"float": [exp_embed, exp_embed]}}
+        long_text = "x" * 5000
+        mock_request = [self.exp_query, long_text]
+
+        mock_stream = BytesIO(json.dumps(mock_response).encode())
+
+        bedrock_stubber.add_response(
+            "invoke_model",
+            {
+                "contentType": "application/json",
+                "body": StreamingBody(mock_stream, len(json.dumps(mock_response))),
+            },
+            expected_params={
+                "accept": "application/json",
+                "contentType": "application/json",
+                "modelId": "us.cohere.embed-v4:0",
+                "body": json.dumps(
+                    {
+                        "input_type": "search_document",
+                        "embedding_types": ["float"],
+                        "output_dimension": 1536,
+                        # v4 inputs are not truncated to the v3 limit of 2048 characters
+                        "texts": mock_request,
+                    }
+                ),
+            },
+        )
+
+        bedrock_embedding = BedrockEmbedding(
+            model_name="us.cohere.embed-v4:0",
+            client=self.bedrock_client,
+            additional_kwargs={"output_dimension": 1536},
+        )
+
+        bedrock_stubber.activate()
+        embedding = bedrock_embedding.get_text_embedding_batch(texts=mock_request)
+        bedrock_stubber.deactivate()
+
+        bedrock_stubber.assert_no_pending_responses()
+        self.assertEqual(embedding, [exp_embed, exp_embed])
+
+    def test_get_query_embedding_cohere_v4(self) -> None:
+        bedrock_stubber = Stubber(self.bedrock_client)
+
+        mock_response = {"embeddings": {"float": [exp_embed]}}
+        mock_stream = BytesIO(json.dumps(mock_response).encode())
+
+        bedrock_stubber.add_response(
+            "invoke_model",
+            {
+                "contentType": "application/json",
+                "body": StreamingBody(mock_stream, len(json.dumps(mock_response))),
+            },
+            expected_params={
+                "accept": "application/json",
+                "contentType": "application/json",
+                "modelId": Models.COHERE_EMBED_V4.value,
+                "body": json.dumps(
+                    {
+                        "input_type": "search_query",
+                        "embedding_types": ["float"],
+                        "texts": [self.exp_query],
+                    }
+                ),
+            },
+        )
+
+        bedrock_embedding = BedrockEmbedding(
+            model_name=Models.COHERE_EMBED_V4,
+            client=self.bedrock_client,
+        )
+
+        bedrock_stubber.activate()
+        embedding = bedrock_embedding.get_query_embedding(query=self.exp_query)
+        bedrock_stubber.deactivate()
+
+        bedrock_stubber.assert_no_pending_responses()
+        self.assertEqual(embedding, exp_embed)
+
+    def test_output_dimension_rejected_for_cohere_v3(self) -> None:
+        bedrock_embedding = BedrockEmbedding(
+            model_name=Models.COHERE_EMBED_ENGLISH_V3,
+            client=self.bedrock_client,
+            additional_kwargs={"output_dimension": 1536},
+        )
+
+        with pytest.raises(ValueError, match="output_dimension"):
+            bedrock_embedding.get_text_embedding(text=self.exp_query)
+
     def test_list_supported_models(self):
         exp_dict = {
             "amazon": [
@@ -181,7 +274,11 @@ class TestBedrockEmbedding(TestCase):
                 "amazon.titan-embed-text-v2:0",
                 "amazon.titan-embed-g1-text-02",
             ],
-            "cohere": ["cohere.embed-english-v3", "cohere.embed-multilingual-v3"],
+            "cohere": [
+                "cohere.embed-english-v3",
+                "cohere.embed-multilingual-v3",
+                "cohere.embed-v4:0",
+            ],
         }
 
         bedrock_embedding = BedrockEmbedding(
