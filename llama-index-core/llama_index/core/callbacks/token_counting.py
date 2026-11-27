@@ -55,8 +55,9 @@ def get_tokens_from_response(
     if not isinstance(usage, dict):
         usage = usage.model_dump()
 
-    possible_input_keys = ("prompt_tokens", "input_tokens")
-    possible_output_keys = ("completion_tokens", "output_tokens")
+    # "inputTokens"/"outputTokens" are the names in an Amazon Bedrock Converse response
+    possible_input_keys = ("prompt_tokens", "input_tokens", "inputTokens")
+    possible_output_keys = ("completion_tokens", "output_tokens", "outputTokens")
 
     prompt_tokens = 0
     for input_key in possible_input_keys:
@@ -107,10 +108,12 @@ def get_llm_token_counts(
         messages_str = "\n".join([str(x) for x in messages])
 
         response = payload.get(EventPayload.RESPONSE)
+        # Not every provider names the model in its raw response (Amazon Bedrock doesn't). TokenCountingHandler
+        # fills in the model from the start of the event in that case.
         if isinstance(response.raw, dict):
             model = response.raw.get("model")
         else:
-            model = response.raw.model
+            model = getattr(response.raw, "model", None)
         response_str = str(response)
 
         if response:
@@ -166,6 +169,8 @@ class TokenCountingHandler(PythonicallyPrintingBaseHandler):
         self.llm_token_counts: List[TokenCountingEvent] = []
         self.embedding_token_counts: List[TokenCountingEvent] = []
         self.tokenizer = tokenizer or get_tokenizer()
+        # Model of each in-flight LLM event, by event ID, taken from the LLM's serialized settings at event start
+        self._llm_event_models: Dict[str, str] = {}
 
         self._token_counter = TokenCounter(tokenizer=self.tokenizer)
         self._verbose = verbose
@@ -194,6 +199,11 @@ class TokenCountingHandler(PythonicallyPrintingBaseHandler):
         parent_id: str = "",
         **kwargs: Any,
     ) -> str:
+        if event_type == CBEventType.LLM and payload is not None:
+            serialized = payload.get(EventPayload.SERIALIZED) or {}
+            model = serialized.get("model") or serialized.get("model_name")
+            if model:
+                self._llm_event_models[event_id] = model
         return event_id
 
     def on_event_end(
@@ -209,13 +219,15 @@ class TokenCountingHandler(PythonicallyPrintingBaseHandler):
             and event_type not in self.event_ends_to_ignore
             and payload is not None
         ):
-            self.llm_token_counts.append(
-                get_llm_token_counts(
-                    token_counter=self._token_counter,
-                    payload=payload,
-                    event_id=event_id,
-                )
+            token_count = get_llm_token_counts(
+                token_counter=self._token_counter,
+                payload=payload,
+                event_id=event_id,
             )
+            started_with_model = self._llm_event_models.pop(event_id, None)
+            if token_count.model is None:
+                token_count.model = started_with_model
+            self.llm_token_counts.append(token_count)
 
             if self._verbose:
                 self._print(

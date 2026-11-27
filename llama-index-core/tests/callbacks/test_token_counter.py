@@ -48,3 +48,68 @@ def test_on_event_end() -> None:
     # Embedding should be one (single token chunk)
     assert handler.total_llm_token_count == 2
     assert handler.total_embedding_token_count == 1
+
+
+def test_llm_model_from_event_start_when_response_has_none() -> None:
+    """A provider that doesn't name the model in its raw response (Amazon Bedrock) gets it from the event start."""
+    from llama_index.core.base.llms.types import ChatMessage, ChatResponse
+    from llama_index.core.callbacks.schema import EventPayload
+
+    handler = TokenCountingHandler()
+    response = ChatResponse(
+        message=ChatMessage(role="assistant", content="hi"),
+        # Bedrock Converse reports usage with these key names, and no "model"
+        raw={"usage": {"inputTokens": 11, "outputTokens": 7, "totalTokens": 18}},
+    )
+
+    handler.on_event_start(
+        CBEventType.LLM,
+        payload={EventPayload.SERIALIZED: {"model": "openai.gpt-oss-120b-1:0"}},
+        event_id=TEST_ID,
+    )
+    handler.on_event_end(
+        CBEventType.LLM,
+        payload={
+            EventPayload.MESSAGES: [ChatMessage(role="user", content="hello")],
+            EventPayload.RESPONSE: response,
+        },
+        event_id=TEST_ID,
+    )
+
+    token_count = handler.llm_token_counts[0]
+    assert token_count.model == "openai.gpt-oss-120b-1:0"
+    # The provider's own counts are used, not a tokenizer estimate
+    assert token_count.prompt_token_count == 11
+    assert token_count.completion_token_count == 7
+    assert handler._llm_event_models == {}
+
+
+def test_llm_model_from_response_wins_over_event_start() -> None:
+    """When the raw response names the model (OpenAI, Azure), that name is kept."""
+    from llama_index.core.base.llms.types import ChatMessage, ChatResponse
+    from llama_index.core.callbacks.schema import EventPayload
+
+    handler = TokenCountingHandler()
+    response = ChatResponse(
+        message=ChatMessage(role="assistant", content="hi"),
+        raw={"model": "gpt-4.1-2025-04-14", "usage": {"prompt_tokens": 5, "completion_tokens": 2}},
+    )
+
+    handler.on_event_start(
+        CBEventType.LLM,
+        payload={EventPayload.SERIALIZED: {"model": "my-deployment"}},
+        event_id=TEST_ID,
+    )
+    handler.on_event_end(
+        CBEventType.LLM,
+        payload={
+            EventPayload.MESSAGES: [ChatMessage(role="user", content="hello")],
+            EventPayload.RESPONSE: response,
+        },
+        event_id=TEST_ID,
+    )
+
+    token_count = handler.llm_token_counts[0]
+    assert token_count.model == "gpt-4.1-2025-04-14"
+    assert token_count.prompt_token_count == 5
+    assert token_count.completion_token_count == 2
