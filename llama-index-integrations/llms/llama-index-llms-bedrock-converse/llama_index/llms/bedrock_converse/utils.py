@@ -74,6 +74,7 @@ BEDROCK_MODELS = {
     "ai21.jamba-1-5-mini-v1:0": 256000,
     "ai21.jamba-1-5-large-v1:0": 256000,
     "deepseek.r1-v1:0": 128000,
+    "openai.gpt-oss-120b-1:0": 128000,
 }
 
 BEDROCK_FUNCTION_CALLING_MODELS = (
@@ -104,6 +105,7 @@ BEDROCK_FUNCTION_CALLING_MODELS = (
     "meta.llama3-2-11b-instruct-v1:0",
     "meta.llama3-2-90b-instruct-v1:0",
     "meta.llama3-3-70b-instruct-v1:0",
+    "openai.gpt-oss-120b-1:0",
 )
 
 BEDROCK_INFERENCE_PROFILE_SUPPORTED_MODELS = (

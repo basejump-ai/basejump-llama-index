@@ -24,6 +24,37 @@ class Models(str, Enum):
     TITAN_EMBEDDING_G1_TEXT_02 = "amazon.titan-embed-g1-text-02"
     COHERE_EMBED_ENGLISH_V3 = "cohere.embed-english-v3"
     COHERE_EMBED_MULTILINGUAL_V3 = "cohere.embed-multilingual-v3"
+    COHERE_EMBED_V4 = "cohere.embed-v4:0"
+
+
+# Cross-region inference profile IDs prefix the model ID, e.g. "us.cohere.embed-v4:0".
+INFERENCE_PROFILE_PREFIXES = ("us.", "eu.", "apac.", "global.")
+
+# Cohere Embed v3 accepts at most 2048 characters per text. v4 has a far larger limit,
+# so its inputs are not truncated here.
+COHERE_V3_MAX_CHARS = 2048
+
+
+def get_base_model_name(model_name: str) -> str:
+    """Strip an inference profile prefix from a model ID, if it has one."""
+    for prefix in INFERENCE_PROFILE_PREFIXES:
+        if model_name.startswith(prefix):
+            return model_name[len(prefix) :]
+    return model_name
+
+
+def get_provider(model_name: str) -> str:
+    """Return the provider part of a model ID or inference profile ID."""
+    return get_base_model_name(model_name).split(".")[0]
+
+
+def _get_cohere_embeddings(r: Dict[str, Any], isbatch: bool) -> Any:
+    embeddings = r.get("embeddings")
+    # When "embedding_types" is requested (always the case for Embed v4), the
+    # embeddings come back keyed by type instead of as a plain list.
+    if isinstance(embeddings, dict):
+        embeddings = embeddings.get("float")
+    return embeddings if isbatch else embeddings[0]
 
 
 PROVIDER_SPECIFIC_IDENTIFIERS = {
@@ -31,9 +62,7 @@ PROVIDER_SPECIFIC_IDENTIFIERS = {
         "get_embeddings_func": lambda r, isbatch: r.get("embedding"),
     },
     PROVIDERS.COHERE.value: {
-        "get_embeddings_func": lambda r, isbatch: (
-            r.get("embeddings") if isbatch else r.get("embeddings")[0]
-        ),
+        "get_embeddings_func": _get_cohere_embeddings,
     },
 }
 
@@ -350,7 +379,7 @@ class BedrockEmbedding(BaseEmbedding):
         if self._client is None:
             raise ValueError("Client not set")
 
-        provider = self.model_name.split(".")[0]
+        provider = get_provider(self.model_name)
         request_body = self._get_request_body(provider, payload, type)
 
         response = self._client.invoke_model(
@@ -373,7 +402,7 @@ class BedrockEmbedding(BaseEmbedding):
         return self._get_embedding(text, "text")
 
     def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
-        provider = self.model_name.split(".")[0]
+        provider = get_provider(self.model_name)
         if provider == PROVIDERS.COHERE:
             return self._get_embedding(texts, "text")
         return super()._get_text_embeddings(texts)
@@ -408,7 +437,7 @@ class BedrockEmbedding(BaseEmbedding):
 
             # Titan Embedding V2.0 has additional body parameters to check.
             if "dimensions" in self.additional_kwargs:
-                if self.model_name == Models.TITAN_EMBEDDING_V2_0:
+                if get_base_model_name(self.model_name) == Models.TITAN_EMBEDDING_V2_0:
                     titan_body_request["dimensions"] = self.additional_kwargs[
                         "dimensions"
                     ]
@@ -417,7 +446,7 @@ class BedrockEmbedding(BaseEmbedding):
                         "'dimensions' param not supported outside of 'titan-embed-text-v2:0' model."
                     )
             if "normalize" in self.additional_kwargs:
-                if self.model_name == Models.TITAN_EMBEDDING_V2_0:
+                if get_base_model_name(self.model_name) == Models.TITAN_EMBEDDING_V2_0:
                     titan_body_request["normalize"] = self.additional_kwargs[
                         "normalize"
                     ]
@@ -434,13 +463,23 @@ class BedrockEmbedding(BaseEmbedding):
                 "query": "search_query",
             }
             payload = [payload] if isinstance(payload, str) else payload
-            payload = [p[:2048] if len(p) > 2048 else p for p in payload]
-            request_body = json.dumps(
-                {
-                    "texts": payload,
-                    "input_type": input_types[input_type],
-                }
-            )
+            cohere_body_request: Dict[str, Any] = {
+                "input_type": input_types[input_type],
+            }
+            if get_base_model_name(self.model_name) == Models.COHERE_EMBED_V4:
+                cohere_body_request["embedding_types"] = ["float"]
+                if "output_dimension" in self.additional_kwargs:
+                    cohere_body_request["output_dimension"] = self.additional_kwargs[
+                        "output_dimension"
+                    ]
+            else:
+                if "output_dimension" in self.additional_kwargs:
+                    raise ValueError(
+                        "'output_dimension' param not supported outside of 'cohere.embed-v4:0' model."
+                    )
+                payload = [p[:COHERE_V3_MAX_CHARS] for p in payload]
+            cohere_body_request["texts"] = payload
+            request_body = json.dumps(cohere_body_request)
         else:
             raise ValueError("Provider not supported")
         return request_body
@@ -462,7 +501,7 @@ class BedrockEmbedding(BaseEmbedding):
         if self._asession is None:
             raise ValueError("Client not set")
 
-        provider = self.model_name.split(".")[0]
+        provider = get_provider(self.model_name)
         request_body = self._get_request_body(provider, payload, type)
 
         async with self._asession.client(
