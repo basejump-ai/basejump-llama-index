@@ -387,11 +387,11 @@ def _create_retry_decorator_async(max_retries: int) -> Callable[[Any], Any]:
     # Wait 2^x * 1 second between each retry starting with
     # 4 seconds, then up to 10 seconds, then 10 seconds afterwards
     try:
-        import aioboto3  # noqa
+        import aiobotocore  # noqa
     except ImportError as e:
         raise ImportError(
-            "You must install the `aioboto3` package to use Bedrock."
-            "Please `pip install aioboto3`"
+            "You must install the `aiobotocore` package to use Bedrock."
+            "Please `pip install aiobotocore`"
         ) from e
 
     return retry(
@@ -457,6 +457,33 @@ def converse_with_retry(
     return _conversion_with_retry(**converse_kwargs)
 
 
+def create_async_session(
+    profile_name: Optional[str] = None,
+    region_name: Optional[str] = None,
+    aws_access_key_id: Optional[str] = None,
+    aws_secret_access_key: Optional[str] = None,
+    aws_session_token: Optional[str] = None,
+    botocore_session: Optional[Any] = None,
+) -> Any:
+    """
+    Create the aiobotocore session that the async Bedrock clients are made from.
+
+    Takes the same arguments as boto3.Session. With no credentials given, the default AWS credential chain is used
+    (environment variables, shared config, container or instance role), as boto3 does.
+    """
+    from aiobotocore.session import AioSession, get_session
+
+    # A plain botocore session can only make synchronous clients, so it is reused only if it is an aiobotocore one
+    session = botocore_session if isinstance(botocore_session, AioSession) else get_session()
+    if profile_name is not None:
+        session.set_config_variable("profile", profile_name)
+    if aws_access_key_id or aws_secret_access_key or aws_session_token:
+        session.set_credentials(aws_access_key_id, aws_secret_access_key, aws_session_token)
+    if region_name is not None:
+        session.set_config_variable("region", region_name)
+    return session
+
+
 async def converse_with_retry_async(
     session: Any,
     config: Any,
@@ -508,12 +535,12 @@ async def converse_with_retry_async(
 
     @retry_decorator
     async def _conversion_with_retry(**kwargs: Any) -> Any:
-        async with session.client("bedrock-runtime", config=config) as client:
+        async with session.create_client("bedrock-runtime", config=config) as client:
             return await client.converse(**kwargs)
 
     @retry_decorator
     async def _conversion_stream_with_retry(**kwargs: Any) -> Any:
-        async with session.client("bedrock-runtime", config=config) as client:
+        async with session.create_client("bedrock-runtime", config=config) as client:
             response = await client.converse_stream(**kwargs)
             async for event in response["stream"]:
                 yield event
