@@ -114,7 +114,7 @@ class MockAsyncSession:
     def __init__(self, *args, **kwargs) -> "MockAsyncSession":
         pass
 
-    def client(self, *args, **kwargs):
+    def create_client(self, *args, **kwargs):
         return AsyncMockClient()
 
 
@@ -127,12 +127,15 @@ def mock_boto3_session(monkeypatch):
 
 
 @pytest.fixture()
-def mock_aioboto3_session(monkeypatch):
-    monkeypatch.setattr("aioboto3.Session", MockAsyncSession)
+def mock_aiobotocore_session(monkeypatch):
+    monkeypatch.setattr(
+        "llama_index.llms.bedrock_converse.base.create_async_session",
+        MockAsyncSession,
+    )
 
 
 @pytest.fixture()
-def bedrock_converse(mock_boto3_session, mock_aioboto3_session):
+def bedrock_converse(mock_boto3_session, mock_aiobotocore_session):
     return BedrockConverse(
         model=EXP_MODEL,
         max_tokens=EXP_MAX_TOKENS,
@@ -146,7 +149,7 @@ def bedrock_converse(mock_boto3_session, mock_aioboto3_session):
 
 @pytest.fixture()
 def bedrock_converse_with_application_inference_profile(
-    mock_boto3_session, mock_aioboto3_session
+    mock_boto3_session, mock_aiobotocore_session
 ):
     """
     Create a BedrockConverse client that uses an application inference profile for invoking the LLM.
@@ -417,3 +420,35 @@ async def test_bedrock_converse_integration_astream_chat_multimodal(
     assert len(chunks) > 1
     combined = "".join(chunks)
     assert len(combined) > 5
+
+
+@pytest.mark.asyncio
+async def test_create_async_session_uses_given_region_and_credentials():
+    from botocore.config import Config
+    from llama_index.llms.bedrock_converse.utils import create_async_session
+
+    session = create_async_session(
+        region_name="eu-west-1",
+        aws_access_key_id="test-access-key",
+        aws_secret_access_key="test-secret-key",
+        aws_session_token="test-session-token",
+    )
+    async with session.create_client("bedrock-runtime", config=Config()) as client:
+        assert client.meta.region_name == "eu-west-1"
+        assert client.meta.service_model.service_name == "bedrock-runtime"
+    credentials = await session.get_credentials()
+    assert credentials.access_key == "test-access-key"
+    assert credentials.secret_key == "test-secret-key"
+    assert credentials.token == "test-session-token"
+
+
+def test_create_async_session_reuses_only_an_aiobotocore_session():
+    import botocore.session
+    from aiobotocore.session import get_session
+    from llama_index.llms.bedrock_converse.utils import create_async_session
+
+    async_session = get_session()
+    assert create_async_session(botocore_session=async_session) is async_session
+    # A synchronous botocore session can't make async clients, so a new session is made
+    sync_session = botocore.session.get_session()
+    assert create_async_session(botocore_session=sync_session) is not sync_session

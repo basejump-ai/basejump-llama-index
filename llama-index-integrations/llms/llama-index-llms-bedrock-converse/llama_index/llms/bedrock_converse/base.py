@@ -41,6 +41,7 @@ from llama_index.llms.bedrock_converse.utils import (
     bedrock_modelname_to_context_size,
     converse_with_retry,
     converse_with_retry_async,
+    create_async_session,
     force_single_tool_call,
     is_bedrock_function_calling_model,
     join_two_dicts,
@@ -210,7 +211,6 @@ class BedrockConverse(FunctionCallingLLM):
         self._config = None
         try:
             import boto3
-            import aioboto3
             from botocore.config import Config
 
             self._config = (
@@ -223,11 +223,11 @@ class BedrockConverse(FunctionCallingLLM):
                 else botocore_config
             )
             session = boto3.Session(**session_kwargs)
-            self._asession = aioboto3.Session(**session_kwargs)
+            self._asession = create_async_session(**session_kwargs)
         except ImportError:
             raise ImportError(
-                "boto3 and/or aioboto3 package not found, install with"
-                "'pip install boto3 aioboto3"
+                "boto3 and/or aiobotocore package not found, install with"
+                "'pip install boto3 aiobotocore"
             )
 
         # Prior to general availability, custom boto3 wheel files were
